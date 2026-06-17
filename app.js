@@ -37,7 +37,7 @@ document.addEventListener('DOMContentLoaded', () => {
     appId: "1:635858753078:web:318ae3c8f1b8570aae6a97",
     measurementId: "G-CHEXB2C2PH",
     // Fallback default Database URL (Adjust if Singapore/Europe region was chosen, e.g. with region prefix)
-    databaseURL: "https://temp-share-671c8-default-rtdb.firebaseio.com"
+    databaseURL: "https://temp-share-671c8-default-rtdb.asia-southeast1.firebasedatabase.app"
   };
 
   // Initialize Firebase
