@@ -27,11 +27,27 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnCopyUrl = document.getElementById('btn-copy-url');
   const toastContainer = document.getElementById('toast-container');
 
+  // Firebase Configuration (Provided by user)
+  const firebaseConfig = {
+    apiKey: "AIzaSyCquwYppcJ1W_6Zsf0F-vG2LBNd_WDBilA",
+    authDomain: "temp-share-671c8.firebaseapp.com",
+    projectId: "temp-share-671c8",
+    storageBucket: "temp-share-671c8.firebasestorage.app",
+    messagingSenderId: "635858753078",
+    appId: "1:635858753078:web:318ae3c8f1b8570aae6a97",
+    measurementId: "G-CHEXB2C2PH",
+    // Fallback default Database URL (Adjust if Singapore/Europe region was chosen, e.g. with region prefix)
+    databaseURL: "https://temp-share-671c8-default-rtdb.firebaseio.com"
+  };
+
+  // Initialize Firebase
+  firebase.initializeApp(firebaseConfig);
+  const database = firebase.database();
+
   // Application State
   let currentPin = null;
   let expiresAt = null;
   let countdownInterval = null;
-  let syncInterval = null;
   let saveTimeout = null;
   let isSaving = false;
   
@@ -144,109 +160,95 @@ document.addEventListener('DOMContentLoaded', () => {
     loginError.classList.remove('hidden');
   };
 
-  // Core Login logic
+  // Core Login logic (Firebase Serverless migration)
   const handleLogin = async (pin) => {
+    setStatus('saving');
     try {
-      const response = await fetch(`/api/session/${pin}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' }
-      });
+      const sessionRef = database.ref('sessions/' + pin);
+      const snapshot = await sessionRef.once('value');
+      const session = snapshot.val();
+      const now = Date.now();
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        showLoginError(errorData.error || 'සැසිය නිර්මාණය කිරීමේ දෝෂයක් සිදු විය.');
-        return;
+      if (session && session.expiresAt > now) {
+        // Existing active session
+        expiresAt = session.expiresAt;
+        currentPin = pin;
+
+        noteEditor.value = session.text || '';
+        updateCharCount(session.text || '');
+        setStatus('saved');
+        showToast('පවතින සටහන් සැසියකට සාර්ථකව සම්බන්ධ විය.', 'success');
+      } else {
+        // If it was expired, clean it first
+        if (session) {
+          await sessionRef.remove();
+        }
+
+        // Create new session
+        expiresAt = now + 15 * 60 * 1000; // 15 mins
+        currentPin = pin;
+
+        await sessionRef.set({
+          text: '',
+          expiresAt: expiresAt
+        });
+
+        noteEditor.value = '';
+        updateCharCount('');
+        setStatus('saved');
+        showToast('නව සටහන් සැසියක් ආරම්භ විය! විනාඩි 15ක් වලංගු වේ.', 'success');
       }
 
-      const data = await response.json();
-      currentPin = pin;
-      expiresAt = data.expiresAt;
-
-      // Update browser URL query parameter silently
+      // Update URL query parameters silently
       const newUrl = `${window.location.origin}${window.location.pathname}?pin=${pin}`;
       window.history.pushState({ path: newUrl }, '', newUrl);
-
-      // Load content
-      await fetchSessionContent();
 
       // View Transitions
       loginView.classList.add('hidden');
       workspaceView.classList.remove('hidden');
       displayPin.textContent = `${pin.charAt(0)}-${pin.substring(1)}`;
 
-      // Start timers
+      // Start Real-time WebSocket synchronization & Expiry Checkers
+      startRealtimeSync();
       startCountdown();
-      startSyncing();
-      
-      if (data.status === 'created') {
-        showToast('නව සටහන් සැසියක් ආරම්භ විය! විනාඩි 15ක් වලංගු වේ.', 'success');
-      } else {
-        showToast('පවතින සටහන් සැසියකට සාර්ථකව සම්බන්ධ විය.', 'success');
-      }
 
     } catch (err) {
       console.error(err);
-      showLoginError('සර්වර් එක සමඟ සම්බන්ධ වීමට අපොහොසත් විය.');
+      showLoginError('Firebase Database එක සමඟ සම්බන්ධ වීමට අපොහොසත් විය. (ඔබේ Database Rules open දැයි පරීක්ෂා කරන්න)');
     }
   };
 
-  // Fetch Session Content
-  const fetchSessionContent = async () => {
+  // Realtime database listener
+  const startRealtimeSync = () => {
     if (!currentPin) return;
-    try {
-      const response = await fetch(`/api/session/${currentPin}`);
+    const sessionRef = database.ref('sessions/' + currentPin);
+    
+    // Register listener
+    sessionRef.on('value', (snapshot) => {
+      const data = snapshot.val();
       
-      if (response.status === 404) {
+      // If deleted from firebase
+      if (!data) {
         handleExpiredSession();
         return;
       }
 
-      if (response.ok) {
-        const data = await response.json();
-        
-        // Update countdown expiry target in case of drift
-        expiresAt = data.expiresAt;
-
-        // ONLY update value if user is not currently focusing/typing in it
-        if (document.activeElement !== noteEditor && !isSaving) {
-          noteEditor.value = data.text;
-          updateCharCount(data.text);
-        }
-      }
-    } catch (err) {
-      console.warn('Sync updates error:', err);
-    }
-  };
-
-  // Save Content
-  const saveContent = async () => {
-    if (!currentPin) return;
-    isSaving = true;
-    setStatus('saving');
-
-    try {
-      const response = await fetch(`/api/session/${currentPin}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: noteEditor.value })
-      });
-
-      if (response.status === 404) {
+      // If expired
+      if (Date.now() > data.expiresAt) {
+        sessionRef.remove();
         handleExpiredSession();
         return;
       }
 
-      if (response.ok) {
+      expiresAt = data.expiresAt;
+
+      // Only update textarea if user is not actively editing it
+      if (document.activeElement !== noteEditor && !isSaving) {
+        noteEditor.value = data.text || '';
+        updateCharCount(data.text || '');
         setStatus('saved');
-      } else {
-        setStatus('error');
       }
-    } catch (err) {
-      console.error(err);
-      setStatus('error');
-    } finally {
-      isSaving = false;
-    }
+    });
   };
 
   // Note editor input listener
@@ -257,17 +259,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Debounce saves
     clearTimeout(saveTimeout);
-    saveTimeout = setTimeout(saveContent, 600);
+    saveTimeout = setTimeout(() => {
+      if (!currentPin) return;
+      isSaving = true;
+      
+      database.ref('sessions/' + currentPin).update({ text })
+        .then(() => {
+          setStatus('saved');
+          isSaving = false;
+        })
+        .catch((err) => {
+          console.error(err);
+          setStatus('error');
+          isSaving = false;
+        });
+    }, 500);
   });
 
   const updateCharCount = (text) => {
     charCount.textContent = `අකුරු: ${text.length}`;
-  };
-
-  // Active Sync interval
-  const startSyncing = () => {
-    clearInterval(syncInterval);
-    syncInterval = setInterval(fetchSessionContent, 3000); // sync every 3 seconds
   };
 
   // Countdown timer logic
@@ -312,8 +322,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Reset to Login View
   const resetAppState = () => {
+    // Unsubscribe database listeners
+    if (currentPin) {
+      database.ref('sessions/' + currentPin).off('value');
+    }
+
     clearInterval(countdownInterval);
-    clearInterval(syncInterval);
     clearTimeout(saveTimeout);
     
     if (confirmDestroyActive) {
@@ -388,16 +402,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Second click: proceed with deletion
     try {
-      const response = await fetch(`/api/session/${currentPin}`, {
-        method: 'DELETE'
-      });
-
-      if (response.ok) {
-        resetAppState();
-        showToast('සැසිය සහ දත්ත සර්වර් එකෙන් සම්පූර්ණයෙන්ම මකා දමන ලදී.', 'success');
-      } else {
-        showToast('සැසිය මකා දැමීමට අපොහොසත් විය.', 'error');
-      }
+      await database.ref('sessions/' + currentPin).remove();
+      resetAppState();
+      showToast('සැසිය සහ දත්ත සර්වර් එකෙන් සම්පූර්ණයෙන්ම මකා දමන ලදී.', 'success');
     } catch (err) {
       console.error(err);
       showToast('සැසිය මකා දැමීමේ දෝෂයක් සිදු විය.', 'error');
