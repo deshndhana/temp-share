@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="si">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TempShare - ආරක්ෂිත සටහන් හුවමාරුව</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Noto+Sans+Sinhala:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <!-- CSS Link -->
+  <link rel="stylesheet" href="style.css">
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+  
+  <div class="app-container">
+    <!-- Background glows for modern design -->
+    <div class="glow-orb orb-1"></div>
+    <div class="glow-orb orb-2"></div>
+
+    <header class="app-header">
+      <div class="logo">
+        <i data-lucide="share-2" class="logo-icon"></i>
+        <span>TempShare</span>
+      </div>
+    </header>
+
+    <main class="app-content">
+      
+      <!-- VIEW 1: PIN ENTRY -->
+      <section id="login-view" class="card fade-in">
+        <h1 class="card-title">සටහන් හුවමාරු කරන්න</h1>
+        <p class="card-desc">ලැප්ටොප් එකේ සිට ජංගම දුරකථනයට (හෝ අනෙක් අතට) passwords, links සහ notes පහසුවෙන් හුවමාරු කරගන්න. ඇතුළු කළ දත්ත විනාඩි 15කින් සදහටම මැකී යයි.</p>
+        
+        <form id="login-form">
+          <div class="pin-input-group">
+            <div class="prefix-select-wrapper">
+              <label for="prefix-select">Prefix</label>
+              <select id="prefix-select" required>
+                <!-- Generated dynamically A-Z in script, fallbacks provided -->
+                <option value="A" selected>A</option>
+                <option value="B">B</option>
+                <option value="C">C</option>
+                <option value="D">D</option>
+                <option value="E">E</option>
+                <option value="F">F</option>
+                <option value="G">G</option>
+                <option value="H">H</option>
+                <option value="I">I</option>
+                <option value="J">J</option>
+                <option value="K">K</option>
+                <option value="L">L</option>
+                <option value="M">M</option>
+                <option value="N">N</option>
+                <option value="O">O</option>
+                <option value="P">P</option>
+                <option value="Q">Q</option>
+                <option value="R">R</option>
+                <option value="S">S</option>
+                <option value="T">T</option>
+                <option value="U">U</option>
+                <option value="V">V</option>
+                <option value="W">W</option>
+                <option value="X">X</option>
+                <option value="Y">Y</option>
+                <option value="Z">Z</option>
+              </select>
+            </div>
+            
+            <div class="digits-input-wrapper">
+              <label for="pin-digits">PIN (අංක 6)</label>
+              <input 
+                type="text" 
+                id="pin-digits" 
+                placeholder="123456" 
+                maxlength="6" 
+                pattern="\d{6}" 
+                inputmode="numeric"
+                required
+                autocomplete="off"
+              >
+            </div>
+          </div>
+
+          <div id="login-error" class="error-message hidden">
+            <i data-lucide="alert-triangle"></i>
+            <span id="error-text">කරුණාකර නිවැරදි PIN එකක් ඇතුළත් කරන්න.</span>
+          </div>
+
+          <button type="submit" class="btn btn-primary" id="login-btn">
+            <span>සම්බන්ධ වන්න / නව සැසියක් අරඹන්න</span>
+            <i data-lucide="arrow-right"></i>
+          </button>
+        </form>
+      </section>
+
+      <!-- VIEW 2: NOTE WORKSPACE -->
+      <section id="workspace-view" class="card fade-in hidden">
+        <div class="workspace-header">
+          <div class="pin-badge">
+            <i data-lucide="lock" class="lock-icon"></i>
+            <span>PIN: <strong id="display-pin">A123456</strong></span>
+          </div>
+          
+          <div class="timer-badge">
+            <i data-lucide="clock" class="clock-icon"></i>
+            <span id="countdown-timer">15:00</span>
+          </div>
+        </div>
+
+        <div class="editor-container">
+          <textarea 
+            id="note-editor" 
+            placeholder="ඔබගේ සටහන්, රහස්පද (passwords) හෝ links මෙතන ලියන්න... (මෙය ස්වයංක්‍රීයව සුරැකේ)"
+            spellcheck="false"
+          ></textarea>
+          
+          <div class="editor-status-bar">
+            <span id="sync-status" class="status-indicator">
+              <i data-lucide="cloud-check" class="status-icon"></i>
+              <span id="status-text">සුරැකුණා</span>
+            </span>
+            <span id="char-count" class="char-count">අකුරු: 0</span>
+          </div>
+        </div>
+
+        <div class="workspace-actions">
+          <button id="btn-copy" class="btn btn-secondary">
+            <i data-lucide="copy"></i>
+            <span>පිටපත් කරන්න</span>
+          </button>
+
+          <button id="btn-qr" class="btn btn-secondary">
+            <i data-lucide="qr-code"></i>
+            <span>QR කේතය</span>
+          </button>
+
+          <button id="btn-logout" class="btn btn-secondary">
+            <i data-lucide="log-out"></i>
+            <span>පිටවෙන්න</span>
+          </button>
+
+          <button id="btn-destroy" class="btn btn-danger">
+            <i data-lucide="trash-2"></i>
+            <span id="destroy-btn-text">සටහන මකන්න</span>
+          </button>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- Modal for Mobile QR Code -->
+    <div id="qr-modal" class="modal hidden">
+      <div class="modal-overlay"></div>
+      <div class="modal-content fade-in">
+        <div class="modal-header">
+          <h3>ෆෝන් එකෙන් Scan කරන්න</h3>
+          <button id="modal-close" class="modal-close-btn">
+            <i data-lucide="x"></i>
+          </button>
+        </div>
+        <p class="modal-desc">ඔබේ ජංගම දුරකථනයේ කැමරාවෙන් මෙම QR කේතය scan කර සෘජුවම මෙම සටහනට පිවිසෙන්න.</p>
+        <div class="qr-container">
+          <img id="qr-image" src="" alt="QR Code">
+        </div>
+        <div class="qr-url-box">
+          <span id="qr-url-text">http://192.168.1.10:3000/</span>
+          <button id="btn-copy-url" class="btn-icon" title="Link එක පිටපත් කරන්න">
+            <i data-lucide="copy"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast Notification System -->
+    <div id="toast-container"></div>
+
+    <footer class="app-footer">
+      <p>TempShare &copy; 2026 - ආරක්ෂිතව සහ තාවකාලිකව දත්ත හුවමාරුව සඳහා</p>
+    </footer>
+  </div>
+
+  <!-- Client Script -->
+  <script src="app.js"></script>
+</body>
+</html>
