@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="si">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TempShare - ආරක්ෂිත සටහන් හුවමාරුව</title>
+  <title>TempShare - Secure Note Sharing</title>
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -34,8 +34,8 @@
       
       <!-- VIEW 1: PIN ENTRY -->
       <section id="login-view" class="card fade-in">
-        <h1 class="card-title">සටහන් හුවමාරු කරන්න</h1>
-        <p class="card-desc">ලැප්ටොප් එකේ සිට ජංගම දුරකථනයට (හෝ අනෙක් අතට) passwords, links සහ notes පහසුවෙන් හුවමාරු කරගන්න. ඇතුළු කළ දත්ත විනාඩි 15කින් සදහටම මැකී යයි.</p>
+        <h1 class="card-title">Share Notes Instantly</h1>
+        <p class="card-desc">Easily share passwords, links, and notes between your laptop and mobile (or vice versa). Your shared data is automatically deleted after 15 minutes of inactivity.</p>
         
         <form id="login-form">
           <div class="pin-input-group">
@@ -73,7 +73,7 @@
             </div>
             
             <div class="digits-input-wrapper">
-              <label for="pin-digits">PIN (අංක 6)</label>
+              <label for="pin-digits">PIN (6 digits)</label>
               <input 
                 type="text" 
                 id="pin-digits" 
@@ -89,11 +89,11 @@
 
           <div id="login-error" class="error-message hidden">
             <i data-lucide="alert-triangle"></i>
-            <span id="error-text">කරුණාකර නිවැරදි PIN එකක් ඇතුළත් කරන්න.</span>
+            <span id="error-text">Please enter a valid PIN.</span>
           </div>
 
           <button type="submit" class="btn btn-primary" id="login-btn">
-            <span>සම්බන්ධ වන්න / නව සැසියක් අරඹන්න</span>
+            <span>Connect / Start New Session</span>
             <i data-lucide="arrow-right"></i>
           </button>
         </form>
@@ -116,38 +116,38 @@
         <div class="editor-container">
           <textarea 
             id="note-editor" 
-            placeholder="ඔබගේ සටහන්, රහස්පද (passwords) හෝ links මෙතන ලියන්න... (මෙය ස්වයංක්‍රීයව සුරැකේ)"
+            placeholder="Type your notes, passwords, or links here... (auto-saved)"
             spellcheck="false"
           ></textarea>
           
           <div class="editor-status-bar">
             <span id="sync-status" class="status-indicator">
               <i data-lucide="cloud-check" class="status-icon"></i>
-              <span id="status-text">සුරැකුණා</span>
+              <span id="status-text">Saved</span>
             </span>
-            <span id="char-count" class="char-count">අකුරු: 0</span>
+            <span id="char-count" class="char-count">Characters: 0</span>
           </div>
         </div>
 
         <div class="workspace-actions">
           <button id="btn-copy" class="btn btn-secondary">
             <i data-lucide="copy"></i>
-            <span>පිටපත් කරන්න</span>
+            <span>Copy Note</span>
           </button>
 
           <button id="btn-qr" class="btn btn-secondary">
             <i data-lucide="qr-code"></i>
-            <span>QR කේතය</span>
+            <span>QR Code</span>
           </button>
 
           <button id="btn-logout" class="btn btn-secondary">
             <i data-lucide="log-out"></i>
-            <span>පිටවෙන්න</span>
+            <span>Disconnect</span>
           </button>
 
           <button id="btn-destroy" class="btn btn-danger">
             <i data-lucide="trash-2"></i>
-            <span id="destroy-btn-text">සටහන මකන්න</span>
+            <span id="destroy-btn-text">Delete Note</span>
           </button>
         </div>
       </section>
@@ -159,18 +159,18 @@
       <div class="modal-overlay"></div>
       <div class="modal-content fade-in">
         <div class="modal-header">
-          <h3>ෆෝන් එකෙන් Scan කරන්න</h3>
+          <h3>Scan with Mobile</h3>
           <button id="modal-close" class="modal-close-btn">
             <i data-lucide="x"></i>
           </button>
         </div>
-        <p class="modal-desc">ඔබේ ජංගම දුරකථනයේ කැමරාවෙන් මෙම QR කේතය scan කර සෘජුවම මෙම සටහනට පිවිසෙන්න.</p>
+        <p class="modal-desc">Scan this QR code with your mobile camera to open this note directly.</p>
         <div class="qr-container">
           <img id="qr-image" src="" alt="QR Code">
         </div>
         <div class="qr-url-box">
           <span id="qr-url-text">http://192.168.1.10:3000/</span>
-          <button id="btn-copy-url" class="btn-icon" title="Link එක පිටපත් කරන්න">
+          <button id="btn-copy-url" class="btn-icon" title="Copy Link">
             <i data-lucide="copy"></i>
           </button>
         </div>
@@ -181,7 +181,7 @@
     <div id="toast-container"></div>
 
     <footer class="app-footer">
-      <p>TempShare &copy; 2026 - ආරක්ෂිතව සහ තාවකාලිකව දත්ත හුවමාරුව සඳහා</p>
+      <p>TempShare &copy; 2026 - Secure & Temporary Data Sharing</p>
     </footer>
   </div>
 

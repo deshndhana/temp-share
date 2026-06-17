@@ -90,19 +90,19 @@ document.addEventListener('DOMContentLoaded', () => {
       syncStatus.classList.add('status-saving');
       syncStatus.innerHTML = `
         <i data-lucide="refresh-cw" class="status-icon spin"></i>
-        <span>සුරැකෙමින් පවතී...</span>
+        <span>Saving...</span>
       `;
     } else if (state === 'saved') {
       syncStatus.classList.add('status-saved');
       syncStatus.innerHTML = `
         <i data-lucide="cloud-check" class="status-icon"></i>
-        <span>සුරැකුණා</span>
+        <span>Saved</span>
       `;
     } else if (state === 'error') {
       syncStatus.classList.add('status-error');
       syncStatus.innerHTML = `
         <i data-lucide="cloud-off" class="status-icon"></i>
-        <span>සම්බන්ධතා දෝෂයක්</span>
+        <span>Connection Error</span>
       `;
     }
     lucide.createIcons({ attrs: { class: 'status-icon' } });
@@ -131,7 +131,7 @@ document.addEventListener('DOMContentLoaded', () => {
       prefixSelect.value = prefix;
       pinDigitsInput.value = digits;
       
-      showToast('QR කේතය හරහා සැසිය හඳුනා ගන්නා ලදී.', 'info');
+      showToast('Session detected via QR code.', 'info');
       
       // Automate login
       handleLogin(pin);
@@ -147,7 +147,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const digits = pinDigitsInput.value;
 
     if (digits.length !== 6) {
-      showLoginError('කරුණාකර ඉලක්කම් 6ක PIN අංකයක් ඇතුළත් කරන්න.');
+      showLoginError('Please enter a 6-digit PIN.');
       return;
     }
 
@@ -177,7 +177,7 @@ document.addEventListener('DOMContentLoaded', () => {
         noteEditor.value = session.text || '';
         updateCharCount(session.text || '');
         setStatus('saved');
-        showToast('පවතින සටහන් සැසියකට සාර්ථකව සම්බන්ධ විය.', 'success');
+        showToast('Successfully connected to the existing session.', 'success');
       } else {
         // If it was expired, clean it first
         if (session) {
@@ -196,7 +196,7 @@ document.addEventListener('DOMContentLoaded', () => {
         noteEditor.value = '';
         updateCharCount('');
         setStatus('saved');
-        showToast('නව සටහන් සැසියක් ආරම්භ විය! විනාඩි 15ක් වලංගු වේ.', 'success');
+        showToast('New sharing session started! Valid for 15 minutes.', 'success');
       }
 
       // Update URL query parameters silently
@@ -214,7 +214,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     } catch (err) {
       console.error(err);
-      showLoginError('Firebase Database එක සමඟ සම්බන්ධ වීමට අපොහොසත් විය. (ඔබේ Database Rules open දැයි පරීක්ෂා කරන්න)');
+      showLoginError('Failed to connect to Firebase Database. Please check your database rules.');
     }
   };
 
@@ -277,7 +277,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   const updateCharCount = (text) => {
-    charCount.textContent = `අකුරු: ${text.length}`;
+    charCount.textContent = `Characters: ${text.length}`;
   };
 
   // Countdown timer logic
@@ -317,7 +317,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Expiration Handler
   const handleExpiredSession = () => {
     resetAppState();
-    showToast('මෙම සටහන් සැසියේ කාලය අවසන් වී දත්ත මැකී ගොස් ඇත.', 'error');
+    showToast('This session has expired and its data has been deleted.', 'error');
   };
 
   // Reset to Login View
@@ -353,25 +353,25 @@ document.addEventListener('DOMContentLoaded', () => {
   // Copy text to clipboard
   btnCopy.addEventListener('click', async () => {
     if (!noteEditor.value) {
-      showToast('පිටපත් කිරීමට දත්ත කිසිවක් නැත!', 'info');
+      showToast('No content to copy!', 'info');
       return;
     }
     
     try {
       await navigator.clipboard.writeText(noteEditor.value);
-      showToast('සටහන සාර්ථකව Clipboard එකට පිටපත් විය!', 'success');
+      showToast('Note copied to clipboard successfully!', 'success');
     } catch (err) {
       // Fallback selector copy
       noteEditor.select();
       document.execCommand('copy');
-      showToast('සටහන පිටපත් විය!', 'success');
+      showToast('Note copied!', 'success');
     }
   });
 
   // Logout function (Exit workspace without deleting session)
   const handleLogoutClick = () => {
     resetAppState();
-    showToast('සැසියෙන් සාර්ථකව පිටවූවා. (දත්ත මකා නොදැමූ අතර PIN එක වලංගුව පවතී)', 'info');
+    showToast('Disconnected from session. (Data was not deleted and PIN remains active)', 'info');
   };
 
   btnLogout.addEventListener('click', handleLogoutClick);
@@ -380,7 +380,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const resetDestroyButton = () => {
     confirmDestroyActive = false;
     clearTimeout(destroyConfirmTimeout);
-    destroyBtnText.textContent = 'සටහන මකන්න';
+    destroyBtnText.textContent = 'Delete Note';
     btnDestroy.classList.remove('btn-danger-confirm');
   };
 
@@ -390,7 +390,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     if (!confirmDestroyActive) {
       confirmDestroyActive = true;
-      destroyBtnText.textContent = 'ස්ථිරද? (නැවත ක්ලික් කරන්න)';
+      destroyBtnText.textContent = 'Are you sure? (Click again)';
       btnDestroy.classList.add('btn-danger-confirm');
       
       // Auto-reset after 4 seconds if not clicked again
@@ -404,10 +404,10 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       await database.ref('sessions/' + currentPin).remove();
       resetAppState();
-      showToast('සැසිය සහ දත්ත සර්වර් එකෙන් සම්පූර්ණයෙන්ම මකා දමන ලදී.', 'success');
+      showToast('Session and data have been permanently deleted.', 'success');
     } catch (err) {
       console.error(err);
-      showToast('සැසිය මකා දැමීමේ දෝෂයක් සිදු විය.', 'error');
+      showToast('An error occurred while deleting the session.', 'error');
     } finally {
       resetDestroyButton();
     }
@@ -433,7 +433,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     
     qrImage.onerror = () => {
-      showToast('QR කේතය සෑදීමට අපොහොසත් විය.', 'error');
+      showToast('Failed to generate QR code.', 'error');
     };
     
     qrImage.src = qrApiUrl;
@@ -443,9 +443,9 @@ document.addEventListener('DOMContentLoaded', () => {
   btnCopyUrl.addEventListener('click', async () => {
     try {
       await navigator.clipboard.writeText(qrUrlText.textContent);
-      showToast('සැසි ලින්ක් එක පිටපත් විය!', 'success');
+      showToast('Session link copied successfully!', 'success');
     } catch (err) {
-      showToast('ලින්ක් එක පිටපත් වීමට අපොහොසත් විය.', 'error');
+      showToast('Failed to copy the session link.', 'error');
     }
   });
 
